@@ -1,10 +1,10 @@
 // sw.js - Service Worker for LX PWA
-const CACHE_NAME = 'lx-cache-v3';
+const CACHE_NAME = 'lx-cache-v4';
 const ASSETS_TO_CACHE = [
   './index.php',
   './manifest.json',
-  './assets/css/style.css?v=3',
-  './assets/js/app.js?v=3',
+  './assets/css/style.css?v=4',
+  './assets/js/app.js?v=4',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png'
 ];
@@ -40,13 +40,18 @@ self.addEventListener('activate', (event) => {
 // Fetch events: Network first, then fall back to cache (useful for dynamic php backend)
 // For static assets, we check cache first
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // Let API requests bypass Service Worker entirely (always fresh from network, never cached)
+  if (url.pathname.includes('api.php')) {
+    return;
+  }
+
   // Only handle GET requests
   if (event.request.method !== 'GET') return;
 
-  // Let index.php and API requests try network first, fallback to offline UI cache if failed
-  const url = new URL(event.request.url);
-  
-  if (url.pathname.endsWith('index.php') || url.pathname.includes('/api/')) {
+  // Let index.php try network first, fallback to offline UI cache if failed
+  if (url.pathname.endsWith('index.php')) {
     event.respondWith(
       fetch(event.request)
         .catch(() => {

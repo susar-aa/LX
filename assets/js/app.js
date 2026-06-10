@@ -508,8 +508,10 @@ function handleAddFriendSubmit(e) {
         if (data.success) {
             bootstrap.Modal.getInstance(document.getElementById('modal-add-friend')).hide();
             showAlert('success', 'Friend added!');
-            // Refresh content based on screen
-            if (activeScreen === 'friends') loadFriendsList();
+            // Always refresh the friends cache/list to update transaction modal dropdowns
+            loadFriendsList();
+            if (activeScreen === 'dashboard') loadDashboardData();
+            else if (activeScreen === 'reports') loadReportsData();
         } else {
             alert(data.error || 'Failed to add friend.');
         }
