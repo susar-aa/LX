@@ -39,7 +39,17 @@ document.addEventListener('DOMContentLoaded', () => {
 // Check login status and configure views
 function checkAuthStatus() {
     fetch('api.php?action=status')
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) {
+                // Read JSON error message if possible
+                return res.json().then(errData => {
+                    throw new Error(errData.error || `Server error (${res.status})`);
+                }).catch(() => {
+                    throw new Error(`Server returned status ${res.status}. Check database connection details.`);
+                });
+            }
+            return res.json();
+        })
         .then(data => {
             if (data.logged_in) {
                 currentUser = data.username;
@@ -55,7 +65,24 @@ function checkAuthStatus() {
         })
         .catch(err => {
             console.error('Error checking auth status:', err);
-            showAlert('danger', 'Server connection error. Please refresh.');
+            // Show persistent message instead of transient alert so they can read DB config issue
+            const viewLogin = document.getElementById('view-login');
+            const viewSetup = document.getElementById('view-setup');
+            
+            // Render friendly overlay in login/setup screen
+            const errorHtml = `
+                <div class="alert alert-danger glass-card m-3 p-4 shadow-lg text-center" style="max-width: 450px; border-radius: 20px;">
+                    <i class="bi bi-database-fill-exclamation fs-1 d-block mb-3 text-danger"></i>
+                    <h4 class="fw-bold">Database Connection Error</h4>
+                    <p class="small text-white-50">${escapeHTML(err.message)}</p>
+                    <hr class="border-secondary opacity-25">
+                    <p class="small mb-0">Please edit <code>config.php</code> on your server to input the correct Plesk database credentials.</p>
+                </div>
+            `;
+            
+            viewLogin.innerHTML = errorHtml;
+            viewLogin.style.display = 'flex';
+            viewSetup.style.display = 'none';
         });
 }
 

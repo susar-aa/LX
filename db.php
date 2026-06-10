@@ -1,27 +1,53 @@
 <?php
 // db.php - Database connection and automatic schema initialization
 
-$db_host = 'localhost';
-$db_user = 'root';
-$db_pass = '';
-$db_name = 'lx_db';
+// 1. Load configuration if exists
+if (file_exists(__DIR__ . '/config.php')) {
+    require_once __DIR__ . '/config.php';
+}
 
-// 1. Establish connection to MySQL server
-$conn = @new mysqli($db_host, $db_user, $db_pass);
+if (!defined('DB_HOST')) define('DB_HOST', 'localhost');
+if (!defined('DB_USER')) define('DB_USER', 'root');
+if (!defined('DB_PASS')) define('DB_PASS', '');
+if (!defined('DB_NAME')) define('DB_NAME', 'lx_db');
+
+// 2. Establish connection to MySQL server
+$conn = @new mysqli(DB_HOST, DB_USER, DB_PASS);
 
 if ($conn->connect_error) {
-    die("Database Connection Failed: " . $conn->connect_error);
+    header('Content-Type: application/json');
+    http_response_code(500);
+    echo json_encode([
+        'error' => 'Database connection failed. Please ensure your config.php contains the correct credentials for lx.suzxlabs.com.',
+        'details' => $conn->connect_error
+    ]);
+    exit;
 }
 
-// 2. Create database if it does not exist
-$sql_db = "CREATE DATABASE IF NOT EXISTS `$db_name` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
-if (!$conn->query($sql_db)) {
-    die("Error creating database: " . $conn->error);
-}
+// 3. Select database or attempt to create it
+$db_selected = @$conn->select_db(DB_NAME);
 
-// 3. Select the database
-if (!$conn->select_db($db_name)) {
-    die("Database selection failed: " . $conn->error);
+if (!$db_selected) {
+    $sql_db = "CREATE DATABASE IF NOT EXISTS `" . DB_NAME . "` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
+    if ($conn->query($sql_db)) {
+        if (!$conn->select_db(DB_NAME)) {
+            header('Content-Type: application/json');
+            http_response_code(500);
+            echo json_encode([
+                'error' => 'Failed to select created database: ' . DB_NAME,
+                'details' => $conn->error
+            ]);
+            exit;
+        }
+    } else {
+        header('Content-Type: application/json');
+        http_response_code(500);
+        echo json_encode([
+            'error' => 'Database "' . DB_NAME . '" does not exist and could not be created automatically. Please create it manually via Plesk and grant privileges to the database user.',
+            'details' => $conn->error
+        ]);
+        exit;
+    }
 }
 
 // 4. Create Tables
