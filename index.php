@@ -7,10 +7,10 @@
     
     <!-- PWA Settings -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#6366f1">
+    <meta name="theme-color" content="#ccff00">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="LX">
     <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
     
@@ -28,7 +28,7 @@
         
         <!-- App Header Sticky -->
         <header class="app-header">
-            <div class="app-title"><i class="bi bi-wallet2 text-primary me-2"></i>LX</div>
+            <div class="app-title"><i class="bi bi-wallet2 me-2"></i>LX</div>
         </header>
 
         <!-- Main Views Container -->
@@ -46,7 +46,7 @@
                     <div class="col-6">
                         <div class="glass-card stat-card">
                             <div class="stat-icon"><i class="bi bi-cash-stack"></i></div>
-                            <div class="stat-value text-white" id="stat-total-lent">Rs. 0.00</div>
+                            <div class="stat-value" id="stat-total-lent">Rs. 0.00</div>
                             <div class="stat-label">Total Lent</div>
                         </div>
                     </div>

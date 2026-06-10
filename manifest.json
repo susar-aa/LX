@@ -4,8 +4,8 @@
   "description": "Personal Debt & Lending Tracker",
   "start_url": "./index.php",
   "display": "standalone",
-  "background_color": "#0d0e15",
-  "theme_color": "#6366f1",
+  "background_color": "#f5f6fa",
+  "theme_color": "#ccff00",
   "orientation": "portrait-primary",
   "icons": [
     {
