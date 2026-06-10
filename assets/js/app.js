@@ -1,7 +1,6 @@
 // assets/js/app.js - LX Frontend Logic
 
 // Global state
-let currentUser = null;
 let activeScreen = 'dashboard';
 let friendsCache = [];
 let currentFriendId = null; // For friend profile view
@@ -48,77 +47,43 @@ if ('serviceWorker' in navigator) {
 
 // Document ready entry point
 document.addEventListener('DOMContentLoaded', () => {
-    checkAuthStatus();
+    initApp();
     setupEventListeners();
 });
 
-// Check login status and configure views
-function checkAuthStatus() {
-    fetch('api.php?action=status')
+// Initialize application and check DB health
+function initApp() {
+    fetch('api.php?action=dashboard_stats')
         .then(res => {
             if (!res.ok) {
-                // Read JSON error message if possible
-                return res.json().then(errData => {
-                    throw new Error(errData.error || `Server error (${res.status})`);
-                }).catch(() => {
-                    throw new Error(`Server returned status ${res.status}. Check database connection details.`);
-                });
+                throw new Error(`Server returned status ${res.status}. Please check your database settings.`);
             }
             return res.json();
         })
-        .then(data => {
-            if (data.logged_in) {
-                currentUser = data.username;
-                showAppShell();
-                // Handle initial routing based on URL hash
-                const hash = window.location.hash.substring(1) || 'dashboard';
-                navigateTo(hash);
-            } else if (data.setup_required) {
-                showScreen('view-setup');
-            } else {
-                showScreen('view-login');
-            }
+        .then(() => {
+            showAppShell();
+            const hash = window.location.hash.substring(1) || 'dashboard';
+            navigateTo(hash);
         })
         .catch(err => {
-            console.error('Error checking auth status:', err);
-            // Show persistent message instead of transient alert so they can read DB config issue
-            const viewLogin = document.getElementById('view-login');
-            const viewSetup = document.getElementById('view-setup');
-            
-            // Render friendly overlay in login/setup screen
-            const errorHtml = `
-                <div class="alert alert-danger glass-card m-3 p-4 shadow-lg text-center" style="max-width: 450px; border-radius: 20px;">
-                    <i class="bi bi-database-fill-exclamation fs-1 d-block mb-3 text-danger"></i>
-                    <h4 class="fw-bold">Database Connection Error</h4>
-                    <p class="small text-white-50">${escapeHTML(err.message)}</p>
-                    <hr class="border-secondary opacity-25">
-                    <p class="small mb-0">Please edit <code>config.php</code> on your server to input the correct Plesk database credentials.</p>
+            console.error('Error initializing application:', err);
+            const appView = document.getElementById('view-app');
+            appView.innerHTML = `
+                <div class="d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+                    <div class="alert alert-danger glass-card m-3 p-4 shadow-lg text-center" style="max-width: 450px; border-radius: 20px;">
+                        <i class="bi bi-database-fill-exclamation fs-1 d-block mb-3 text-danger"></i>
+                        <h4 class="fw-bold">Database Connection Error</h4>
+                        <p class="small text-white-50">${escapeHTML(err.message)}</p>
+                        <hr class="border-secondary opacity-25">
+                        <p class="small mb-0">Please edit <code>config.php</code> on your server to input the correct Plesk database credentials.</p>
+                    </div>
                 </div>
             `;
-            
-            viewLogin.innerHTML = errorHtml;
-            viewLogin.style.display = 'flex';
-            viewSetup.style.display = 'none';
         });
 }
 
-// Show/hide screen views
-function showScreen(screenId) {
-    document.querySelectorAll('.auth-wrapper, #view-app').forEach(el => {
-        el.style.display = 'none';
-    });
-    
-    if (screenId === 'view-app') {
-        document.getElementById('view-app').style.display = 'block';
-    } else {
-        const target = document.getElementById(screenId);
-        if (target) target.style.display = 'flex';
-    }
-}
-
 function showAppShell() {
-    showScreen('view-app');
-    document.getElementById('display-username').textContent = currentUser;
+    document.getElementById('view-app').style.display = 'block';
 }
 
 // Router navigation logic
@@ -213,13 +178,8 @@ function setupEventListeners() {
     });
 
     // Forms Form-Submissions
-    document.getElementById('form-setup').addEventListener('submit', handleSetupSubmit);
-    document.getElementById('form-login').addEventListener('submit', handleLoginSubmit);
     document.getElementById('form-add-friend').addEventListener('submit', handleAddFriendSubmit);
     document.getElementById('form-transaction').addEventListener('submit', handleTransactionSubmit);
-    
-    // Logout btn
-    document.getElementById('btn-logout').addEventListener('click', handleLogout);
 
     // Filter Badges
     document.querySelectorAll('.filter-badge').forEach(badge => {
@@ -238,144 +198,6 @@ function setupEventListeners() {
             loadTransactionsList();
         }, 300);
     });
-}
-
-// --- Auth Submit Handlers ---
-function handleSetupSubmit(e) {
-    e.preventDefault();
-    
-    const usernameInput = document.getElementById('setup-username');
-    const passwordInput = document.getElementById('setup-password');
-    
-    const username = usernameInput.value.trim();
-    const password = passwordInput.value;
-    
-    if (!username) {
-        showAlert('danger', 'Username is required.');
-        usernameInput.focus();
-        return;
-    }
-    
-    if (!password) {
-        showAlert('danger', 'Password is required.');
-        passwordInput.focus();
-        return;
-    }
-    
-    if (password.length < 6) {
-        showAlert('danger', 'Password must be at least 6 characters.');
-        passwordInput.focus();
-        return;
-    }
-    
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Initializing...';
-    
-    const fd = new FormData(this);
-    
-    fetch('api.php?action=setup', {
-        method: 'POST',
-        body: fd
-    })
-    .then(res => {
-        if (!res.ok) {
-            return res.json().then(errData => {
-                throw new Error(errData.error || 'Setup failed.');
-            }).catch(() => {
-                throw new Error(`Setup failed with status ${res.status}`);
-            });
-        }
-        return res.json();
-    })
-    .then(data => {
-        if (data.success) {
-            showAlert('success', 'Admin user registered.');
-            checkAuthStatus();
-        } else {
-            showAlert('danger', data.error || 'Failed to complete setup.');
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalText;
-        }
-    })
-    .catch(err => {
-        console.error(err);
-        showAlert('danger', err.message || 'Failed to communicate with setup endpoint.');
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-    });
-}
-
-function handleLoginSubmit(e) {
-    e.preventDefault();
-    
-    const usernameInput = document.getElementById('login-username');
-    const passwordInput = document.getElementById('login-password');
-    
-    const username = usernameInput.value.trim();
-    const password = passwordInput.value;
-    
-    if (!username) {
-        showAlert('danger', 'Username is required.');
-        usernameInput.focus();
-        return;
-    }
-    
-    if (!password) {
-        showAlert('danger', 'Password is required.');
-        passwordInput.focus();
-        return;
-    }
-    
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Logging in...';
-    
-    const fd = new FormData(this);
-    
-    fetch('api.php?action=login', {
-        method: 'POST',
-        body: fd
-    })
-    .then(res => {
-        if (!res.ok) {
-            return res.json().then(errData => {
-                throw new Error(errData.error || 'Invalid username or password.');
-            }).catch(() => {
-                throw new Error(`Server returned status ${res.status}`);
-            });
-        }
-        return res.json();
-    })
-    .then(data => {
-        if (data.success) {
-            checkAuthStatus();
-        } else {
-            showAlert('danger', data.error || 'Invalid credentials.');
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalText;
-        }
-    })
-    .catch(err => {
-        console.error(err);
-        showAlert('danger', err.message || 'Login failed. Please retry.');
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-    });
-}
-
-function handleLogout() {
-    if (confirm('Are you sure you want to logout?')) {
-        fetch('api.php?action=logout')
-            .then(res => res.json())
-            .then(() => {
-                currentUser = null;
-                window.location.hash = '';
-                checkAuthStatus();
-            });
-    }
 }
 
 // --- Data Loading Handlers ---

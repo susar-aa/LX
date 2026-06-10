@@ -19,77 +19,16 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     
     <!-- Custom Style Sheet -->
-    <link rel="stylesheet" href="assets/css/style.css?v=2">
+    <link rel="stylesheet" href="assets/css/style.css?v=3">
 </head>
 <body>
 
-    <!-- ================= AUTH: REGISTER/SETUP ================= -->
-    <div id="view-setup" class="auth-wrapper" style="display: none;">
-        <div class="glass-card auth-card text-center">
-            <div class="mb-4">
-                <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-4 p-3 mb-3" style="width: 70px; height: 70px;">
-                    <i class="bi bi-shield-lock-fill fs-1"></i>
-                </div>
-                <h2>Initialize LX</h2>
-                <p class="text-muted-custom">Create the single administrator account to begin tracking debts.</p>
-            </div>
-            
-            <form id="form-setup">
-                <div class="text-start mb-3">
-                    <label for="setup-username" class="glass-label">Username</label>
-                    <input type="text" id="setup-username" name="username" class="form-control glass-input" placeholder="admin" required autocomplete="username">
-                </div>
-                <div class="text-start mb-4">
-                    <label for="setup-password" class="glass-label">Password</label>
-                    <input type="password" id="setup-password" name="password" class="form-control glass-input" placeholder="••••••••" required autocomplete="new-password">
-                    <div class="form-text text-muted-custom small mt-1">Must be at least 6 characters.</div>
-                </div>
-                <button type="submit" class="glass-btn glass-btn-primary w-100">
-                    <i class="bi bi-check-circle-fill"></i> Complete Setup
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- ================= AUTH: LOGIN ================= -->
-    <div id="view-login" class="auth-wrapper" style="display: none;">
-        <div class="glass-card auth-card text-center">
-            <div class="mb-4">
-                <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-gradient text-white rounded-4 p-3 mb-3 shadow" style="width: 75px; height: 75px;">
-                    <span class="fs-2 fw-bold">LX</span>
-                </div>
-                <h2>Welcome Back</h2>
-                <p class="text-muted-custom">Log in to manage your lending records.</p>
-            </div>
-            
-            <form id="form-login">
-                <div class="text-start mb-3">
-                    <label for="login-username" class="glass-label">Username</label>
-                    <input type="text" id="login-username" name="username" class="form-control glass-input" placeholder="Enter username" required autocomplete="username">
-                </div>
-                <div class="text-start mb-4">
-                    <label for="login-password" class="glass-label">Password</label>
-                    <input type="password" id="login-password" name="password" class="form-control glass-input" placeholder="Enter password" required autocomplete="current-password">
-                </div>
-                <button type="submit" class="glass-btn glass-btn-primary w-100">
-                    <i class="bi bi-box-arrow-in-right"></i> Log In
-                </button>
-            </form>
-        </div>
-    </div>
-
     <!-- ================= MAIN APP SYSTEM ================= -->
-    <div id="view-app" style="display: none;">
+    <div id="view-app">
         
         <!-- App Header Sticky -->
         <header class="app-header">
             <div class="app-title"><i class="bi bi-wallet2 text-primary me-2"></i>LX</div>
-            <div class="d-flex align-items-center gap-3">
-                <span class="small text-muted-custom d-none d-sm-inline">Logged in as: <strong class="text-white" id="display-username"></strong></span>
-                <button class="logout-icon-btn" id="btn-logout" title="Log Out">
-                    <i class="bi bi-box-arrow-right"></i>
-                </button>
-            </div>
         </header>
 
         <!-- Main Views Container -->
@@ -426,6 +365,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Application Logic -->
-    <script src="assets/js/app.js?v=2"></script>
+    <script src="assets/js/app.js?v=3"></script>
 </body>
 </html>

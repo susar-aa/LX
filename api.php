@@ -1,6 +1,5 @@
 <?php
 // api.php - Backend API for LX
-session_start();
 require_once 'db.php';
 
 // Helper to send JSON responses
@@ -11,111 +10,7 @@ function sendJson($data, $status = 200) {
     exit;
 }
 
-// Check if setup is required (no users in database)
-function isSetupRequired() {
-    $conn = get_db_connection();
-    $result = $conn->query("SELECT COUNT(*) as count FROM users");
-    $row = $result->fetch_assoc();
-    return intval($row['count']) === 0;
-}
-
-// Require authentication check
-function requireAuth() {
-    if (!isset($_SESSION['user_id'])) {
-        sendJson(['error' => 'Unauthorized. Please login.'], 401);
-    }
-}
-
 $action = $_GET['action'] ?? '';
-
-// --- Unauthenticated Actions ---
-
-if ($action === 'status') {
-    $setup = isSetupRequired();
-    sendJson([
-        'logged_in' => isset($_SESSION['user_id']),
-        'setup_required' => $setup,
-        'username' => $_SESSION['username'] ?? null
-    ]);
-}
-
-if ($action === 'setup') {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        sendJson(['error' => 'Invalid request method.'], 400);
-    }
-    
-    if (!isSetupRequired()) {
-        sendJson(['error' => 'Setup already completed.'], 400);
-    }
-    
-    $username = trim($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? '';
-    
-    if (empty($username) || empty($password)) {
-        sendJson(['error' => 'Username and password are required.'], 400);
-    }
-    
-    if (strlen($password) < 6) {
-        sendJson(['error' => 'Password must be at least 6 characters.'], 400);
-    }
-    
-    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-    $conn = get_db_connection();
-    
-    $stmt = $conn->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
-    $stmt->bind_param("ss", $username, $hashed_password);
-    
-    if ($stmt->execute()) {
-        // Auto-login after setup
-        $_SESSION['user_id'] = $stmt->insert_id;
-        $_SESSION['username'] = $username;
-        sendJson(['success' => 'Administrator account created successfully.']);
-    } else {
-        sendJson(['error' => 'Failed to create administrator: ' . $conn->error], 500);
-    }
-}
-
-if ($action === 'login') {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        sendJson(['error' => 'Invalid request method.'], 400);
-    }
-    
-    if (isSetupRequired()) {
-        sendJson(['error' => 'Setup is required first.'], 400);
-    }
-    
-    $username = trim($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? '';
-    
-    if (empty($username) || empty($password)) {
-        sendJson(['error' => 'Username and password are required.'], 400);
-    }
-    
-    $conn = get_db_connection();
-    $stmt = $conn->prepare("SELECT id, password FROM users WHERE username = ?");
-    $stmt->bind_param("s", $username);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if ($result->num_rows === 1) {
-        $user = $result->fetch_assoc();
-        if (password_verify($password, $user['password'])) {
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $username;
-            sendJson(['success' => 'Logged in successfully.']);
-        }
-    }
-    
-    sendJson(['error' => 'Invalid username or password.'], 401);
-}
-
-if ($action === 'logout') {
-    session_destroy();
-    sendJson(['success' => 'Logged out successfully.']);
-}
-
-// --- Authenticated Actions ---
-requireAuth();
 $conn = get_db_connection();
 
 switch ($action) {

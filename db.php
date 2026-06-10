@@ -51,14 +51,6 @@ if (!$db_selected) {
 }
 
 // 4. Create Tables
-// Users Table (for single admin auth)
-$sql_users = "CREATE TABLE IF NOT EXISTS `users` (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `username` VARCHAR(50) NOT NULL UNIQUE,
-    `password` VARCHAR(255) NOT NULL,
-    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
-
 // Friends Table
 $sql_friends = "CREATE TABLE IF NOT EXISTS `friends` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -85,7 +77,7 @@ $sql_settings = "CREATE TABLE IF NOT EXISTS `settings` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
 // Execute creations
-if (!$conn->query($sql_users) || !$conn->query($sql_friends) || !$conn->query($sql_transactions) || !$conn->query($sql_settings)) {
+if (!$conn->query($sql_friends) || !$conn->query($sql_transactions) || !$conn->query($sql_settings)) {
     die("Error initializing database schema: " . $conn->error);
 }
 
