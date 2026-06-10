@@ -7,8 +7,8 @@ if (file_exists(__DIR__ . '/config.php')) {
 }
 
 if (!defined('DB_HOST')) define('DB_HOST', 'localhost');
-if (!defined('DB_USER')) define('DB_USER', 'root');
-if (!defined('DB_PASS')) define('DB_PASS', '');
+if (!defined('DB_USER')) define('DB_USER', 'suzxlabs');
+if (!defined('DB_PASS')) define('DB_PASS', 'Susara@200611003614');
 if (!defined('DB_NAME')) define('DB_NAME', 'lx_db');
 
 // 2. Establish connection to MySQL server
