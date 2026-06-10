@@ -21,11 +21,27 @@ function formatDate(dateStr) {
     return d.toLocaleDateString('en-US', options);
 }
 
-// Service worker registration
+// Service worker registration and update notification
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('Service Worker registered.', reg.scope))
+            .then(reg => {
+                console.log('Service Worker registered.', reg.scope);
+                
+                // Monitor for updates to prompt reload
+                reg.addEventListener('updatefound', () => {
+                    const newWorker = reg.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            console.log('New update installed. Reloading...');
+                            showAlert('success', 'App updated! Reloading...');
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        }
+                    });
+                });
+            })
             .catch(err => console.warn('Service Worker registration failed.', err));
     });
 }
@@ -227,46 +243,126 @@ function setupEventListeners() {
 // --- Auth Submit Handlers ---
 function handleSetupSubmit(e) {
     e.preventDefault();
+    
+    const usernameInput = document.getElementById('setup-username');
+    const passwordInput = document.getElementById('setup-password');
+    
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value;
+    
+    if (!username) {
+        showAlert('danger', 'Username is required.');
+        usernameInput.focus();
+        return;
+    }
+    
+    if (!password) {
+        showAlert('danger', 'Password is required.');
+        passwordInput.focus();
+        return;
+    }
+    
+    if (password.length < 6) {
+        showAlert('danger', 'Password must be at least 6 characters.');
+        passwordInput.focus();
+        return;
+    }
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Initializing...';
+    
     const fd = new FormData(this);
     
     fetch('api.php?action=setup', {
         method: 'POST',
         body: fd
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(errData => {
+                throw new Error(errData.error || 'Setup failed.');
+            }).catch(() => {
+                throw new Error(`Setup failed with status ${res.status}`);
+            });
+        }
+        return res.json();
+    })
     .then(data => {
         if (data.success) {
             showAlert('success', 'Admin user registered.');
             checkAuthStatus();
         } else {
             showAlert('danger', data.error || 'Failed to complete setup.');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
         }
     })
     .catch(err => {
         console.error(err);
-        showAlert('danger', 'Failed to communicate with setup endpoint.');
+        showAlert('danger', err.message || 'Failed to communicate with setup endpoint.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
     });
 }
 
 function handleLoginSubmit(e) {
     e.preventDefault();
+    
+    const usernameInput = document.getElementById('login-username');
+    const passwordInput = document.getElementById('login-password');
+    
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value;
+    
+    if (!username) {
+        showAlert('danger', 'Username is required.');
+        usernameInput.focus();
+        return;
+    }
+    
+    if (!password) {
+        showAlert('danger', 'Password is required.');
+        passwordInput.focus();
+        return;
+    }
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Logging in...';
+    
     const fd = new FormData(this);
     
     fetch('api.php?action=login', {
         method: 'POST',
         body: fd
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(errData => {
+                throw new Error(errData.error || 'Invalid username or password.');
+            }).catch(() => {
+                throw new Error(`Server returned status ${res.status}`);
+            });
+        }
+        return res.json();
+    })
     .then(data => {
         if (data.success) {
             checkAuthStatus();
         } else {
             showAlert('danger', data.error || 'Invalid credentials.');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
         }
     })
     .catch(err => {
         console.error(err);
-        showAlert('danger', 'Login failed. Please retry.');
+        showAlert('danger', err.message || 'Login failed. Please retry.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
     });
 }
 
@@ -555,13 +651,37 @@ function openAddFriendModal() {
 
 function handleAddFriendSubmit(e) {
     e.preventDefault();
+    
+    const nameInput = document.getElementById('friend-name');
+    const name = nameInput.value.trim();
+    
+    if (!name) {
+        alert('Friend name is required.');
+        nameInput.focus();
+        return;
+    }
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Adding...';
+    
     const fd = new FormData(this);
     
     fetch('api.php?action=add_friend', {
         method: 'POST',
         body: fd
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(errData => {
+                throw new Error(errData.error || 'Failed to add friend.');
+            }).catch(() => {
+                throw new Error('Failed to add friend.');
+            });
+        }
+        return res.json();
+    })
     .then(data => {
         if (data.success) {
             bootstrap.Modal.getInstance(document.getElementById('modal-add-friend')).hide();
@@ -571,8 +691,15 @@ function handleAddFriendSubmit(e) {
         } else {
             alert(data.error || 'Failed to add friend.');
         }
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
     })
-    .catch(err => console.error('Add Friend Error:', err));
+    .catch(err => {
+        console.error('Add Friend Error:', err);
+        alert(err.message || 'Failed to add friend.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
 }
 
 // Transaction Modal (Lend / Repayment)
@@ -626,13 +753,51 @@ function openTransactionModal(type) {
 
 function handleTransactionSubmit(e) {
     e.preventDefault();
+    
+    const friendSelect = document.getElementById('tx-friend-id');
+    const amountInput = document.getElementById('tx-amount');
+    const dateInput = document.getElementById('tx-date');
+    
+    if (!friendSelect.value) {
+        alert('Please select a friend.');
+        friendSelect.focus();
+        return;
+    }
+    
+    const amount = parseFloat(amountInput.value);
+    if (isNaN(amount) || amount <= 0) {
+        alert('Amount must be greater than zero.');
+        amountInput.focus();
+        return;
+    }
+    
+    if (!dateInput.value) {
+        alert('Date is required.');
+        dateInput.focus();
+        return;
+    }
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+    
     const fd = new FormData(this);
     
     fetch('api.php?action=record_transaction', {
         method: 'POST',
         body: fd
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(errData => {
+                throw new Error(errData.error || 'Failed to record transaction.');
+            }).catch(() => {
+                throw new Error('Failed to record transaction.');
+            });
+        }
+        return res.json();
+    })
     .then(data => {
         if (data.success) {
             bootstrap.Modal.getInstance(document.getElementById('modal-transaction')).hide();
@@ -649,8 +814,15 @@ function handleTransactionSubmit(e) {
         } else {
             alert(data.error || 'Failed to record transaction.');
         }
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
     })
-    .catch(err => console.error('Record Transaction Error:', err));
+    .catch(err => {
+        console.error('Record Transaction Error:', err);
+        alert(err.message || 'Failed to record transaction.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
 }
 
 // Delete transaction

@@ -1,10 +1,10 @@
 // sw.js - Service Worker for LX PWA
-const CACHE_NAME = 'lx-cache-v1';
+const CACHE_NAME = 'lx-cache-v2';
 const ASSETS_TO_CACHE = [
   './index.php',
   './manifest.json',
-  './assets/css/style.css',
-  './assets/js/app.js',
+  './assets/css/style.css?v=2',
+  './assets/js/app.js?v=2',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png'
 ];

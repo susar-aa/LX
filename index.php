@@ -19,7 +19,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     
     <!-- Custom Style Sheet -->
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css?v=2">
 </head>
 <body>
 
@@ -335,22 +335,22 @@
 
         <!-- ================= BOTTOM NAVIGATION BAR ================= -->
         <nav class="bottom-nav">
-            <button class="bottom-nav-item active" href="#dashboard">
+            <a class="bottom-nav-item active" href="#dashboard">
                 <i class="bi bi-grid-1x2-fill"></i>
                 Dashboard
-            </button>
-            <button class="bottom-nav-item" href="#friends">
+            </a>
+            <a class="bottom-nav-item" href="#friends">
                 <i class="bi bi-people-fill"></i>
                 Friends
-            </button>
-            <button class="bottom-nav-item" href="#transactions">
+            </a>
+            <a class="bottom-nav-item" href="#transactions">
                 <i class="bi bi-arrow-left-right"></i>
                 History
-            </button>
-            <button class="bottom-nav-item" href="#reports">
+            </a>
+            <a class="bottom-nav-item" href="#reports">
                 <i class="bi bi-file-bar-graph-fill"></i>
                 Reports
-            </button>
+            </a>
         </nav>
 
         <!-- ================= MODALS ================= -->
@@ -426,6 +426,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Application Logic -->
-    <script src="assets/js/app.js"></script>
+    <script src="assets/js/app.js?v=2"></script>
 </body>
 </html>
