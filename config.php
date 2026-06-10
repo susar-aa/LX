@@ -3,7 +3,7 @@
 // Edit this file to match your database server details on lx.suzxlabs.com
 
 define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_USER', 'suzxlabs');
+define('DB_PASS', 'Susara@200611003614');
 define('DB_NAME', 'lx_db');
 ?>
